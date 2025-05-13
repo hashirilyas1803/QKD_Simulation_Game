@@ -4,7 +4,7 @@ import sys
 
 # Initialize Pygame
 pygame.init()
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1200, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Quantum Cheat Sheet Heist")
 clock = pygame.time.Clock()
@@ -29,7 +29,29 @@ class QKDGame:
     def __init__(self):
         self.num_photons = 10
         self.reset_game()
+        self.header_image = None
+        self.image_height = 0
         
+        try:
+            # Load and scale image to match window width
+            original_image = pygame.image.load('image.png')
+            target_width = WIDTH  # Use full window width
+            print(original_image.get_width, original_image.get_height)
+            
+            # Calculate proportional height
+            # scale_factor = target_width / original_image.get_width()
+            # target_height = int(original_image.get_height() * scale_factor)
+            target_height = 300
+            
+            # Scale image and get dimensions
+            self.header_image = pygame.transform.smoothscale(original_image, (target_width, target_height))
+            self.image_height = self.header_image.get_height()  # Set AFTER scaling
+            
+        except Exception as e:
+            print(f"Image loading error: {e}")
+            self.header_image = None
+            self.image_height = 0
+
     def reset_game(self):
         self.state = STATE_ALICE_BIT
         self.photons = [{
@@ -55,25 +77,24 @@ class QKDGame:
         pygame.draw.line(screen, color, (x, y+60), (x+20, y+90), 2)
 
     def draw_choice_screen(self, phase):
-        screen.fill(WHITE)
         font = pygame.font.SysFont('Arial', 40)
         
         # Draw stick figure
-        color = BLUE if "Alice" in phase else GREEN if "Bob" in phase else RED
-        self.draw_stick_figure(100, 100, color)
+        color = BLUE if "Hashir" in phase else GREEN if "Imad" in phase else RED
+        self.draw_stick_figure(100, 100 + self.image_height, color)
         
         # Display photon number
         title = font.render(f"Photon {self.current_photon + 1}/{self.num_photons} - {phase}", True, BLACK)
-        screen.blit(title, (200, 50))
+        screen.blit(title, (200, 50 + self.image_height))
         
         # Create buttons based on phase
         buttons = []
-        if phase == "Alice: Choose Bit":
-            buttons.append(self.create_button("0", 200, 200, GREEN))
-            buttons.append(self.create_button("1", 450, 200, RED))
+        if phase == "Hashir: Choose Bit":
+            buttons.append(self.create_button("0", 200, 200 + self.image_height, GREEN))
+            buttons.append(self.create_button("1", 450, 200 + self.image_height, RED))
         else:
-            buttons.append(self.create_button("+ Basis", 200, 200, GREEN))
-            buttons.append(self.create_button("× Basis", 450, 200, RED))
+            buttons.append(self.create_button("+ Basis", 200, 200 + self.image_height, GREEN))
+            buttons.append(self.create_button("× Basis", 450, 200 + self.image_height, RED))
         
         return buttons
 
@@ -103,7 +124,7 @@ class QKDGame:
             if photon['eve_basis'] == photon['alice_basis']:
                 photon['eve_bit'] = photon['alice_bit']
             else:
-                photon['eve_bit'] = random.choice([0, 1])  # 50% chance of error
+                photon['eve_bit'] = random.choice([0, 1])
             
             # Bob's measurement
             if photon['bob_basis'] == photon['eve_basis']:
@@ -119,11 +140,10 @@ class QKDGame:
                 self.state = STATE_ALICE_BIT
 
     def process_sifting(self):
-        # Sift the key by matching bases
-        self.sifted_key = []  # Alice's key
-        self.bob_key = []     # Bob's key
+        self.sifted_key = []
+        self.bob_key = []
         self.eve_key = []
-        self.sifted_indices = []  # Track original photon indices
+        self.sifted_indices = []
         
         for idx, photon in enumerate(self.photons):
             if photon['alice_basis'] == photon['bob_basis']:
@@ -132,7 +152,6 @@ class QKDGame:
                 self.sifted_indices.append(idx)
                 self.eve_key.append(photon['eve_bit'])
         
-        # Error checking - compare Alice's and Bob's sifted keys
         sample_size = max(1, int(len(self.sifted_key) * 1))
         check_indices = random.sample(range(len(self.sifted_key)), min(sample_size, len(self.sifted_key)))
         
@@ -154,16 +173,16 @@ class QKDGame:
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.state == STATE_RESULT:
-                        if pygame.Rect(300, 500, 200, 50).collidepoint(mouse_pos):
+                        if pygame.Rect(300, 300 + self.image_height, 200, 50).collidepoint(mouse_pos):
                             self.reset_game()
                     elif self.state == STATE_SIFTING:
                         self.state = STATE_RESULT
                     else:
                         phase_map = {
-                            STATE_ALICE_BIT: "Alice: Choose Bit",
-                            STATE_ALICE_BASIS: "Alice: Choose Basis",
-                            STATE_BOB: "Bob: Choose Basis",
-                            STATE_EVE: "Eve: Choose Basis"
+                            STATE_ALICE_BIT: "Hashir: Choose Bit",
+                            STATE_ALICE_BASIS: "Hashir: Choose Basis",
+                            STATE_BOB: "Imad: Choose Basis",
+                            STATE_EVE: "Deebaj: Choose Basis"
                         }
                         buttons = self.draw_choice_screen(phase_map[self.state])
                         
@@ -179,6 +198,8 @@ class QKDGame:
 
             # Drawing
             screen.fill(WHITE)
+            if self.header_image:
+                screen.blit(self.header_image, (0, 0))
             
             if self.state == STATE_RESULT:
                 self.draw_results()
@@ -201,28 +222,25 @@ class QKDGame:
 
     def draw_sifting(self):
         font = pygame.font.SysFont('Arial', 40)
-        screen.blit(font.render("Comparing bases...", True, BLACK), (50, 50))
-        screen.blit(font.render(f"Sifted key length: {len(self.sifted_key)}", True, BLACK), (50, 100))
-        pygame.draw.rect(screen, BLUE, (300, 500, 200, 50))
-        screen.blit(font.render("Continue", True, WHITE), (325, 515))
+        screen.blit(font.render("Comparing bases...", True, BLACK), (50, 50 + self.image_height))
+        screen.blit(font.render(f"Sifted key length: {len(self.sifted_key)}", True, BLACK), (50, 100 + self.image_height))
+        pygame.draw.rect(screen, BLUE, (300, 300 + self.image_height, 200, 50))
+        screen.blit(font.render("Continue", True, WHITE), (325, 315 + self.image_height))
 
     def draw_results(self):
         font = pygame.font.SysFont('Arial', 30)
         total_checked = len(self.revealed_bits)
         error_rate = self.errors / total_checked if total_checked > 0 else 0
         
-        # Determine outcome
         eve_full_key = (
             len(self.eve_key) == len(self.sifted_key) and 
             all(eve_bit is not None and eve_bit == sifted_bit 
-                for eve_bit, sifted_bit in zip(self.eve_key, self.sifted_key)
-            )
+                for eve_bit, sifted_bit in zip(self.eve_key, self.sifted_key))
         )
 
-        detected = error_rate > 0.2  # 50% error threshold
+        detected = error_rate > 0.2
         
-        # Results text
-        y = 50
+        y = 50 + self.image_height
         if detected:
             screen.blit(font.render("Deebaj detected! Transmission aborted!", True, RED), (50, y))
         elif eve_full_key:
@@ -230,7 +248,6 @@ class QKDGame:
         else:
             screen.blit(font.render("Answer key shared! You both pass DAA!", True, GREEN), (50, y))
         
-        # Detailed information
         y += 60 
         screen.blit(font.render(f"Hashir's Key: {self.sifted_key}", True, BLACK), (50, y))
         y += 40
@@ -242,9 +259,8 @@ class QKDGame:
             error_text = f"Error rate: {error_rate:.0%} ({self.errors}/{total_checked} errors)"
             screen.blit(font.render(error_text, True, BLACK), (50, y))
         
-        # Replay button
-        pygame.draw.rect(screen, BLUE, (300, 500, 200, 50))
-        screen.blit(font.render("Play Again", True, WHITE), (325, 515))
+        pygame.draw.rect(screen, BLUE, (300, 300 + self.image_height, 200, 50))
+        screen.blit(font.render("Play Again", True, WHITE), (325, 315 + self.image_height))
 
 
 if __name__ == "__main__":
