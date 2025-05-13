@@ -186,10 +186,10 @@ class QKDGame:
                 self.draw_sifting()
             else:
                 phase_map = {
-                    STATE_ALICE_BIT: "Alice: Choose Bit",
-                    STATE_ALICE_BASIS: "Alice: Choose Basis",
-                    STATE_BOB: "Bob: Choose Basis",
-                    STATE_EVE: "Eve: Choose Basis"
+                    STATE_ALICE_BIT: "Hashir: Choose Bit",
+                    STATE_ALICE_BASIS: "Hashir: Choose Basis",
+                    STATE_BOB: "Imad: Choose Basis",
+                    STATE_EVE: "Deebaj: Choose Basis"
                 }
                 self.draw_choice_screen(phase_map[self.state])
 
@@ -219,27 +219,28 @@ class QKDGame:
             )
         )
 
-        detected = error_rate > 0.25  # 30% error threshold
+        detected = error_rate > 0.2  # 50% error threshold
         
         # Results text
         y = 50
         if detected:
-            screen.blit(font.render("Eve detected! Transmission aborted!", True, RED), (50, y))
+            screen.blit(font.render("Deebaj detected! Transmission aborted!", True, RED), (50, y))
         elif eve_full_key:
-            screen.blit(font.render("TA caught you! Plagiarism reported! FAIL!", True, RED), (50, y))
+            screen.blit(font.render("Deebaj caught you! Plagiarism reported! You both FAIL DAA!!!", True, RED), (50, y))
         else:
-            screen.blit(font.render("Answer key shared! You pass DAA!", True, GREEN), (50, y))
+            screen.blit(font.render("Answer key shared! You both pass DAA!", True, GREEN), (50, y))
         
         # Detailed information
-        y += 60
-        screen.blit(font.render(f"Alice's Key: {self.sifted_key}", True, BLACK), (50, y))
+        y += 60 
+        screen.blit(font.render(f"Hashir's Key: {self.sifted_key}", True, BLACK), (50, y))
         y += 40
-        screen.blit(font.render(f"Bob's Key:   {self.bob_key}", True, BLUE), (50, y))
+        screen.blit(font.render(f"Imad's Key:   {self.bob_key}", True, BLUE), (50, y))
         y += 40
-        screen.blit(font.render(f"Eve's Knowledge: {self.eve_key}", True, RED), (50, y))
-        y += 40
-        error_text = f"Error rate: {error_rate:.0%} ({self.errors}/{total_checked} errors)"
-        screen.blit(font.render(error_text, True, BLACK), (50, y))
+        screen.blit(font.render(f"Deebaj's Knowledge: {self.eve_key}", True, RED), (50, y))
+        if detected or not eve_full_key:
+            y += 40
+            error_text = f"Error rate: {error_rate:.0%} ({self.errors}/{total_checked} errors)"
+            screen.blit(font.render(error_text, True, BLACK), (50, y))
         
         # Replay button
         pygame.draw.rect(screen, BLUE, (300, 500, 200, 50))
