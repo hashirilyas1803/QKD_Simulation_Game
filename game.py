@@ -1,6 +1,15 @@
+import sys
 import pygame
 import random
-import sys
+import os
+
+def resource_path(relative_path):
+    """ Get absolute path to resources for PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 # Initialize Pygame
 pygame.init()
@@ -34,7 +43,7 @@ class QKDGame:
         
         try:
             # Load and scale image to match window width
-            original_image = pygame.image.load('image.png')
+            original_image = pygame.image.load(resource_path('image.png'))
             target_width = WIDTH  # Use full window width
             print(original_image.get_width, original_image.get_height)
             
